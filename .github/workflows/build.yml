@@ -1,0 +1,32 @@
+name: Build libaimbody.so
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Android NDK
+        run: |
+          wget -q https://dl.google.com/android/repository/android-ndk-r26d-linux.zip
+          unzip -q android-ndk-r26d-linux.zip
+          echo "$PWD/android-ndk-r26d/toolchains/llvm/prebuilt/linux-x86_64/bin" >> $GITHUB_PATH
+
+      - name: Compile libaimbody.so
+        run: |
+          armv7a-linux-androideabi21-clang++ \
+            -shared -fPIC -O2 \
+            aimbody.cpp -o libaimbody.so \
+            -llog -ldl -std=c++17 -target armv7a-none-linux-androideabi21
+
+      - name: Upload libaimbody.so
+        uses: actions/upload-artifact@v4
+        with:
+          name: libaimbody
+          path: libaimbody.so
+          retention-days: 30
